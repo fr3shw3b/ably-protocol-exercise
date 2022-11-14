@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"errors"
-	"log"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -72,7 +71,7 @@ func (s *serverImpl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	sequenceCountStr := query.Get("sequenceCount")
 	sequenceCount, err := deriveSequenceCount(sequenceCountStr)
 	if err != nil {
-		log.Println("Failed to parse sequenceCount: ", err)
+		s.logger.Error("Failed to parse sequenceCount: ", err)
 		conn.WriteControl(
 			websocket.CloseMessage,
 			websocket.FormatCloseMessage(
@@ -89,7 +88,7 @@ func (s *serverImpl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	lastReceivedIndexStr := query.Get("lastReceived")
 	lastReceived, err := deriveLastReceivedIndex(lastReceivedIndexStr)
 	if err != nil {
-		log.Println("Failed to parse lastReceived: ", err)
+		s.logger.Error("Failed to parse lastReceived: ", err)
 		conn.WriteControl(
 			websocket.CloseMessage,
 			websocket.FormatCloseMessage(
@@ -110,7 +109,7 @@ func (s *serverImpl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// here will be ignored.
 	session, err := s.store.Initialise(clientID, sequence)
 	if err != nil {
-		log.Println("Failed to initialise session: ", err)
+		s.logger.Error("Failed to initialise session: ", err)
 		expiredSession := isExpiredSessionError(err.Error())
 		if expiredSession {
 			conn.WriteControl(
@@ -131,7 +130,7 @@ func (s *serverImpl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for {
 		_, message, err := conn.ReadMessage()
 		if err != nil {
-			log.Println("read error:", err)
+			s.logger.Error("read error:", err)
 			break
 		}
 		s.handleMessage(message, clientID, conn)

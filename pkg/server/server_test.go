@@ -15,8 +15,7 @@ import (
 
 func Test_server_produces_sequence_of_numbers_and_client_processes_them_successfully(t *testing.T) {
 
-	logger := logrus.New()
-	logger.SetLevel(logrus.DebugLevel)
+	logger := createLogger()
 
 	server := createTestServer()
 	defer server.Close()
@@ -60,8 +59,7 @@ func Test_server_produces_sequence_of_numbers_and_client_processes_them_successf
 }
 
 func Test_failure_due_to_missing_client_id(t *testing.T) {
-	logger := logrus.New()
-	logger.SetLevel(logrus.DebugLevel)
+	logger := createLogger()
 
 	server := createTestServer()
 	defer server.Close()
@@ -107,8 +105,7 @@ func Test_failure_due_to_missing_client_id(t *testing.T) {
 }
 
 func Test_failure_due_to_invalid_sequence_count(t *testing.T) {
-	logger := logrus.New()
-	logger.SetLevel(logrus.DebugLevel)
+	logger := createLogger()
 
 	server := createTestServer()
 	defer server.Close()
@@ -157,8 +154,7 @@ func Test_failure_due_to_invalid_sequence_count(t *testing.T) {
 }
 
 func Test_failure_due_to_invalid_last_received_index(t *testing.T) {
-	logger := logrus.New()
-	logger.SetLevel(logrus.DebugLevel)
+	logger := createLogger()
 
 	server := createTestServer()
 	defer server.Close()
@@ -209,8 +205,7 @@ func Test_failure_due_to_invalid_last_received_index(t *testing.T) {
 }
 
 func Test_server_handles_concurrent_clients(t *testing.T) {
-	logger := logrus.New()
-	logger.SetLevel(logrus.DebugLevel)
+	logger := createLogger()
 
 	server := createTestServer()
 	defer server.Close()
@@ -274,8 +269,7 @@ func Test_server_handles_concurrent_clients(t *testing.T) {
 }
 
 func createTestServer() *httptest.Server {
-	logger := logrus.New()
-	logger.SetLevel(logrus.DebugLevel)
+	logger := createLogger()
 
 	storeParams := &sessions.InMemoryStoreParams{
 		ExpireAfterIdleTime: 30,
@@ -289,4 +283,14 @@ func createTestServer() *httptest.Server {
 	server := NewDefaultServer(serverParams, store, logger)
 
 	return httptest.NewServer(server)
+}
+
+func createLogger() *logrus.Logger {
+	customFormatter := new(logrus.TextFormatter)
+	customFormatter.TimestampFormat = "2006-01-02T15:04:05.999999999Z07:00"
+	customFormatter.FullTimestamp = true
+	logger := logrus.New()
+	logger.SetLevel(logrus.DebugLevel)
+	logger.SetFormatter(customFormatter)
+	return logger
 }

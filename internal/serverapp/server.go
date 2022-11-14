@@ -36,7 +36,11 @@ func Run(port int) error {
 		log.Fatal("Failed to load configuration for server: ", err)
 	}
 
+	customFormatter := new(logrus.TextFormatter)
+	customFormatter.TimestampFormat = "2006-01-02T15:04:05.999999999Z07:00"
+	customFormatter.FullTimestamp = true
 	logger := logrus.New()
+	logger.SetFormatter(customFormatter)
 	logLevel, err := logrus.ParseLevel(conf.LogLevel)
 	if err != nil {
 		logLevel = logrus.InfoLevel
