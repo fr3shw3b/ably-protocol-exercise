@@ -45,6 +45,12 @@ The port can be any unused port that you would like to run the server.
 ./bin/client --server-host localhost --server-port 3049
 ```
 
+With sequence count:
+
+```bash
+./bin/client --server-host localhost --server-port 3049 --sequence-count 200
+```
+
 The port must be the same port the server is running on.
 
 ## Testing
