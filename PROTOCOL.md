@@ -33,6 +33,8 @@ Example for a re-connection:
 The ID to use to identify a client session that the server will use to keep track of progress
 and be able to continue when a client disconnects and re-connects.
 
+If the client ID is not provided the connection must be closed by the server with a custom `MissingClientId` close code, see [close codes](#close-codes).
+
 #### Sequence Count
 
 `sequenceCount` (query string, default = random number between 0x1 and 0xffff)
@@ -40,6 +42,8 @@ and be able to continue when a client disconnects and re-connects.
 **optional**
 
 The number of messages that the client expects to receive from the server where the primary payload from the server message is a pseudo-randomly generated number.
+
+If the sequence count is not a valid integer or exceeds 0xffff, the connection must be closed by the server with a custom `InvalidSequenceCount` close code, see [close codes](#close-codes).
 
 #### Last Received Index
 
@@ -53,11 +57,15 @@ to continue from if this is not provided.
 When provided, this will be treated as the source of truth by the server and acknowledgements in session
 state will not be used.
 
+If the last received index is not a valid integer or exceeds 0xffff, the connection must be closed by the server with a custom `InvalidLastReceived` close code, see [close codes](#close-codes).
+
 ### The Server
 
 Upon receiving a client identifier, an optional sequence count and last received index, the server must initialise a pseudo-random sequence of numbers of `sequenceCount` numbers and store in persistent state keyed by the provided `clientId` that lives through multiple connections up to a pre-configured deadline during a period of disconnection.
 
 The server must upgrade the connection from HTTP to Sockets to establish a long-lived connection allowing for low latency delivery of messages from the server to client along with bi-directional communication via the underlying WebSockets protocol.
+
+In the case the session has expired for the given `clientId`, the server must close the connection with a custom `ExpiredSession` close code, see [close codes](#close-codes).
 
 ## Sequence Delivery & Acknowledgements
 
@@ -125,3 +133,13 @@ _As the nature of message delivery on a WebSocket over TCP connection is sequent
 - NumberInSequencePrefix (0x1) - A number in a sequence sent from the server to the client.
 - AcknowledgementPrefix (0x2) - An acknowledgement from the client to the server that a number in the sequence has been received by client.
 - LastNumberInSequencePrefix (0x3) - The message containing the final number in the sequence along with a checksum.
+
+## Close Codes
+
+Custom close codes in the range dedicated to private use as per the RFC:
+https://www.rfc-editor.org/rfc/rfc6455.html#section-11.7
+
+- ExpiredSession (4001) - The session has expired for the provided client ID.
+- MissingClientId (4002) - The provided client ID
+- InvalidSequenceCount (4003) - The sequence count is either not a valid integer or exceeds the maximum allowed size of 0xffff.
+- InvalidLastReceived (4004) - The last received index provided in the query string parameter is invalid.
